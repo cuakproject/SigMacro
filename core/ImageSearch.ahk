@@ -149,3 +149,54 @@ WaitForPasswordLabel(&outX, &outY, timeoutMs := 5000) {
             return false
     }
 }
+
+; ── Invalid BC detection ──────────────────────────────────────
+CheckInvalidBC() {
+    global CFG
+    return FindImage(A_ScriptDir "\image\invalid_bc.png",
+        CFG["region_invalidbc_x1"], CFG["region_invalidbc_y1"],
+        CFG["region_invalidbc_x2"], CFG["region_invalidbc_y2"],
+        &fx, &fy, CFG["img_tol_fast"])
+}
+
+WaitForInvalidBC(timeoutMs := 2000) {
+    elapsed := 0
+    Loop {
+        if CheckInvalidBC()
+            return true
+        Sleep(16)
+        elapsed += 16
+        if (elapsed >= timeoutMs)
+            return false
+    }
+}
+
+
+; ── Roblox detection ─────────────────────────────────────────
+CheckRobloxHome() {
+    global CFG
+    return FindImage(A_ScriptDir "\image\roblox_home.png",
+        CFG["region_robloxhome_x1"], CFG["region_robloxhome_y1"],
+        CFG["region_robloxhome_x2"], CFG["region_robloxhome_y2"],
+        &fx, &fy, CFG["img_tol_fast"])
+    || FindImage(A_ScriptDir "\image\roblox_home_dark.png",
+        CFG["region_robloxhome_x1"], CFG["region_robloxhome_y1"],
+        CFG["region_robloxhome_x2"], CFG["region_robloxhome_y2"],
+        &fx, &fy, CFG["img_tol_fast"])
+}
+
+FindRobuxItem(imageName, &outX, &outY) {
+    global CFG
+    ; Coba light dulu
+    if FindImage(A_ScriptDir "\image\" imageName,
+        CFG["region_80robux_x1"], CFG["region_80robux_y1"],
+        CFG["region_80robux_x2"], CFG["region_80robux_y2"],
+        &outX, &outY, "10,20,30,40,50,60,70,80,90,100,110,120,130")
+        return true
+    ; Coba dark
+    darkName := StrReplace(imageName, ".png", "_dark.png")
+    return FindImage(A_ScriptDir "\image\" darkName,
+        CFG["region_80robux_x1"], CFG["region_80robux_y1"],
+        CFG["region_80robux_x2"], CFG["region_80robux_y2"],
+        &outX, &outY, "10,20,30,40,50,60,70,80,90,100,110,120,130")
+}

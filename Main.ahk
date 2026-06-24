@@ -14,15 +14,15 @@ CoordMode("Pixel", "Screen")
 SendMode("Input")
 
 ; ── MODULES (urutan penting!) ──────────────────────────────
-#Include shared\Constants.ahk      ; COORD map — semua koordinat
-#Include shared\Config.ahk         ; CFG map — timing, toleransi (INI)
-#Include shared\Stats.ahk          ; RecordSession, LoadStats, ResetStats
-#Include shared\Update.ahk         ; CheckForUpdate
-#Include core\Logger.ahk           ; Log, SetLogCallback, EnableFileLog
-#Include core\Mouse.ahk            ; HumanClick, BezierMove, Delay
-#Include core\ImageSearch.ahk      ; FindImage, WaitForImage, CheckIncompatible
-#Include core\Logic.ahk            ; Semua aksi (Login, BC, dll)
-#Include ui\SettingsDialog.ahk     ; ShowSettingsDialog
+#Include shared\Constants.ahk
+#Include shared\Config.ahk
+#Include shared\Stats.ahk
+#Include shared\Update.ahk
+#Include core\Logger.ahk
+#Include core\Mouse.ahk
+#Include core\ImageSearch.ahk
+#Include core\Logic.ahk
+#Include ui\SettingsDialog.ahk
 
 ; ── INIT ───────────────────────────────────────────────────
 if !A_IsAdmin {
@@ -34,118 +34,290 @@ EnsureDefaultConfig()
 LoadConfig()
 LoadStats()
 
-iconPath := A_MyDocuments "\..\Downloads\OnlyDits\assets\mamayo.ico"
+iconPath := A_MyDocuments "\..\Downloads\OnlyDits\assets\sticker.ico"
 if FileExist(iconPath)
     TraySetIcon(iconPath)
 
 ; ── GLOBAL STATE ───────────────────────────────────────────
-global g_IsRunning := false
-global g_TotalAttempts  ; diset oleh LoadStats()
-global g_SuccessCount   ; diset oleh LoadStats()
+global g_IsRunning   := false
+global g_TotalAttempts
+global g_SuccessCount
+global g_ActiveTab   := 1
 
-; ── GUI ────────────────────────────────────────────────────
-global AppGui := Gui("+AlwaysOnTop", "OnlyDits v2.1")
+; ============================================================
+;  GUI
+; ============================================================
+global AppGui := Gui("+AlwaysOnTop", "Sigmacro v2.1")
 global StatusText, EditLog, StatsText
+global TabBtns := []
 
 AppGui.BackColor := "F0F0F0"
 
-; Header
+; ── HEADER ─────────────────────────────────────────────────
 AppGui.SetFont("s14 c222222 Bold", "Segoe UI")
-AppGui.Add("Text", "x10 y8 w380 Center BackgroundTrans", "OnlyDits v2.1")
-
-AppGui.SetFont("s8 c888888 Norm", "Segoe UI")
-AppGui.Add("Text", "x10 y32 w380 Center BackgroundTrans", "Vilog Automation Tool")
+AppGui.Add("Text", "x10 y8 w380 Center BackgroundTrans", "Sigmacro v2.1")
 
 AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
-StatusText := AppGui.Add("Text", "x10 y50 w380 Center vStatusText BackgroundTrans", "Ready")
+StatusText := AppGui.Add("Text", "x10 y40 w380 Center vStatusText BackgroundTrans", "Ready")
 
-; ── GROUP: LOGIN ───────────────────────────────────────────
-AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
-AppGui.Add("GroupBox", "x10 y70 w380 h110", "LOGIN")
+; ── TAB BUTTONS ────────────────────────────────────────────
+tabLabels := ["Website", "Tele", "BC Code", "Tools"]
+tabX      := [10, 105, 200, 295]
+
 AppGui.SetFont("s9 c000000 Norm", "Segoe UI")
-b1 := AppGui.Add("Button", "x22 y88  w178 h30", "Login Clipboard")
-b2 := AppGui.Add("Button", "x206 y88  w178 h30", "Login Website")
-b3 := AppGui.Add("Button", "x22 y124 w178 h30", "PW Tele")
-b4 := AppGui.Add("Button", "x206 y124 w178 h30", "PW Web")
+loop 4 {
+    i   := A_Index
+    btn := AppGui.Add("Button", "x" tabX[i] " y68 w92 h24", tabLabels[i])
+    btn.OnEvent("Click", TabClick.Bind(i))
+    TabBtns.Push(btn)
+}
 
-; ── GROUP: BACKUP CODE ─────────────────────────────────────
-AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
-AppGui.Add("GroupBox", "x10 y188 w380 h110", "BACKUP CODE")
-AppGui.SetFont("s9 c000000 Norm", "Segoe UI")
-b5 := AppGui.Add("Button", "x22 y206 w178 h30", "Proses BC 1")
-b6 := AppGui.Add("Button", "x206 y206 w178 h30", "Proses BC 2")
-b7 := AppGui.Add("Button", "x22 y242 w178 h30", "BC Authen")
-b8 := AppGui.Add("Button", "x206 y242 w178 h30", "Copy BC")
+; ============================================================
+;  KONTEN TAB — semua dibuat sekaligus, non-aktif di-hide
+; ============================================================
+global TabControls := Map()
 
-; ── GROUP: TOOLS ───────────────────────────────────────────
-AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
-AppGui.Add("GroupBox", "x10 y306 w380 h55", "TOOLS")
-AppGui.SetFont("s9 c000000 Norm", "Segoe UI")
-b9  := AppGui.Add("Button", "x22  y324 w86 h30", "Reload")
-b10 := AppGui.Add("Button", "x114 y324 w86 h30", "Exit")
-b11 := AppGui.Add("Button", "x206 y324 w86 h30", "Pause")
-b12 := AppGui.Add("Button", "x298 y324 w86 h30", "Settings")
+; Helper section label + separator
+MakeSection(yLabel, labelText) {
+    AppGui.SetFont("s8 c888888 Bold", "Segoe UI")
+    lbl := AppGui.Add("Text", "x10 y" yLabel " w380 BackgroundTrans", labelText)
+    sep := AppGui.Add("Text", "x10 y" (yLabel+13) " w380 h1 BackgroundTrans 0x10")
+    return [lbl, sep]
+}
+
+; Helper tombol
+MakeBtn(x, y, w, label) {
+    AppGui.SetFont("s9 c000000 Norm", "Segoe UI")
+    return AppGui.Add("Button", "x" x " y" y " w" w " h30", label)
+}
+
+; ── TAB 1 — WEBSITE ────────────────────────────────────────
+{
+    c := []
+    c.Push(MakeSection(98,  "LOGIN (WEB)")*)
+    c.Push(MakeBtn(22,  118, 178, "Login Clipboard"))   ; idx 3
+    c.Push(MakeBtn(206, 118, 178, "Login Website"))     ; idx 4
+
+    c.Push(MakeSection(158, "PASSWORD")*)
+    c.Push(MakeBtn(22,  178, 178, "PW Web"))            ; idx 7
+
+    c.Push(MakeSection(218, "BACKUP CODE (WEB)")*)
+    c.Push(MakeBtn(22,  238, 178, "BC Email Web"))       ; idx 10
+    c.Push(MakeBtn(206, 238, 178, "BC Retry Web"))       ; idx 11
+    c.Push(MakeBtn(22,  274, 178, "BC Authen Web"))         ; idx 12
+    c.Push(MakeBtn(206, 274, 178, "Copy BC Web"))       ; idx 13
+
+    c.Push(MakeSection(318, "TOOLS")*)
+    c.Push(MakeBtn(22,  338,  86, "↺ Reload"))          ; idx 16
+    c.Push(MakeBtn(114, 338,  86, "✕ Exit"))            ; idx 17
+    c.Push(MakeBtn(206, 338, 178, "⚙ Settings"))        ; idx 18
+
+    c[3].OnEvent("Click",  (*) => GuiAction("Login Clipboard", DoLoginClipboardWeb))
+    c[4].OnEvent("Click",  (*) => GuiAction("Login Website",   DoLoginWebsite))
+    c[7].OnEvent("Click",  (*) => GuiAction("PW Web",          PastePwClipboard))
+    c[10].OnEvent("Click", (*) => GuiAction("BC Email Web",     DoProsesBC1Web))
+    c[11].OnEvent("Click", (*) => GuiAction("BC Retry Web",     BCWithIncompatWeb))
+    c[12].OnEvent("Click", (*) => GuiAction("BC Authen Web",       BCAuthenWeb))
+    c[13].OnEvent("Click", (*) => GuiAction("Copy BC Web",     CopyBCWebsite))
+    c[16].OnEvent("Click", (*) => Reload())
+    c[17].OnEvent("Click", (*) => ExitApp())
+    c[18].OnEvent("Click", (*) => ShowSettingsDialog())
+
+    TabControls[1] := c
+}
+
+; ── TAB 2 — TELE ───────────────────────────────────────────
+{
+    c := []
+    c.Push(MakeSection(98,  "LOGIN (TELE)")*)
+    c.Push(MakeBtn(22,  118, 178, "Login Clipboard"))   ; idx 3
+
+    c.Push(MakeSection(158, "PASSWORD")*)
+    c.Push(MakeBtn(22,  178, 178, "PW Tele"))           ; idx 6
+
+    c.Push(MakeSection(218, "BACKUP CODE (TELE)")*)
+    c.Push(MakeBtn(22,  238, 178, "BC Email Tele"))       ; idx 9
+    c.Push(MakeBtn(206, 238, 178, "BC Retry Tele"))       ; idx 10
+    c.Push(MakeBtn(22,  274, 178, "BC Authen"))         ; idx 11
+    c.Push(MakeBtn(206, 274, 178, "Copy BC"))           ; idx 12
+
+    c.Push(MakeSection(318, "TOOLS")*)
+    c.Push(MakeBtn(22,  338,  86, "↺ Reload"))          ; idx 15
+    c.Push(MakeBtn(114, 338,  86, "✕ Exit"))            ; idx 16
+    c.Push(MakeBtn(206, 338, 178, "⚙ Settings"))        ; idx 17
+
+    c[3].OnEvent("Click",  (*) => GuiAction("Login Clipboard", DoLoginClipboard))
+    c[6].OnEvent("Click",  (*) => GuiAction("PW Tele",         PwdThenBC))
+    c[9].OnEvent("Click",  (*) => GuiAction("BC Email Tele",     DoProsesBC1))
+    c[10].OnEvent("Click", (*) => GuiAction("BC Retry Tele",     BCWithIncompat))
+    c[11].OnEvent("Click", (*) => GuiAction("BC Authen Tele",       BCAuthen))
+    c[12].OnEvent("Click", (*) => GuiAction("Copy BC Tele",         CopyBackupCodes))
+    c[15].OnEvent("Click", (*) => Reload())
+    c[16].OnEvent("Click", (*) => ExitApp())
+    c[17].OnEvent("Click", (*) => ShowSettingsDialog())
+
+    TabControls[2] := c
+}
+
+; ── TAB 3 — BACKUP CODE ────────────────────────────────────
+{
+    c := []
+    c.Push(MakeSection(98,  "LOGIN")*)
+    c.Push(MakeBtn(22,  118, 178, "Login Clipboard"))   ; idx 3
+    c.Push(MakeBtn(206, 118, 178, "Login Website"))     ; idx 4
+
+    c.Push(MakeSection(158, "BACKUP CODE (TELE)")*)
+    c.Push(MakeBtn(22,  178, 178, "BC Email"))          ; idx 7
+    c.Push(MakeBtn(206, 178, 178, "BC Retry"))          ; idx 8
+    c.Push(MakeBtn(22,  214, 178, "BC Authen"))         ; idx 9
+    c.Push(MakeBtn(206, 214, 178, "Copy BC"))           ; idx 10
+
+    c.Push(MakeSection(248, "BACKUP CODE (WEB)")*)       ; ← 258 → 248
+    c.Push(MakeBtn(22,  268, 178, "BC Email Web"))      ; ← 278 → 268
+    c.Push(MakeBtn(206, 268, 178, "BC Retry Web"))      ; ← 278 → 268
+    c.Push(MakeBtn(22,  304, 178, "BC Authen Web"))     ; ← 314 → 304
+    c.Push(MakeBtn(206, 304, 178, "Copy BC Web"))       ; ← 314 → 304
+
+    c.Push(MakeSection(338, "TOOLS")*)                   ; ← 358 → 338
+    c.Push(MakeBtn(22,  358,  86, "↺ Reload"))          ; ← 378 → 358
+    c.Push(MakeBtn(114, 358,  86, "✕ Exit"))            ; ← 378 → 358
+    c.Push(MakeBtn(206, 358, 178, "⚙ Settings"))        ; ← 378 → 358
+
+    c[3].OnEvent("Click",  (*) => GuiAction("Login Clipboard", DoLoginClipboard))
+    c[4].OnEvent("Click",  (*) => GuiAction("Login Website",   DoLoginWebsite))
+    c[7].OnEvent("Click",  (*) => GuiAction("BC Email Tele",   DoProsesBC1))
+    c[8].OnEvent("Click",  (*) => GuiAction("BC Retry Tele",   BCWithIncompat))
+    c[9].OnEvent("Click",  (*) => GuiAction("BC Authen Tele",  BCAuthen))
+    c[10].OnEvent("Click", (*) => GuiAction("Copy BC Tele",    CopyBackupCodes))
+    c[13].OnEvent("Click", (*) => GuiAction("BC Email Web",    DoProsesBC1Web))
+    c[14].OnEvent("Click", (*) => GuiAction("BC Retry Web",    BCWithIncompatWeb))
+    c[15].OnEvent("Click", (*) => GuiAction("BC Authen Web",   BCAuthenWeb))
+    c[16].OnEvent("Click", (*) => GuiAction("Copy BC Web",     CopyBCWebsite))
+    c[19].OnEvent("Click", (*) => Reload())
+    c[20].OnEvent("Click", (*) => ExitApp())
+    c[21].OnEvent("Click", (*) => ShowSettingsDialog())
+
+    TabControls[3] := c
+}
+
+; ── TAB 4 — TOOLS ──────────────────────────────────────────
+{
+    c := []
+    c.Push(MakeSection(98,  "TOOLS")*)
+    c.Push(MakeBtn(22,  118,  86, "↺ Reload"))          ; idx 3
+    c.Push(MakeBtn(114, 118,  86, "✕ Exit"))            ; idx 4
+    c.Push(MakeBtn(206, 118,  86, "⏸ Pause"))           ; idx 5
+    c.Push(MakeBtn(298, 118,  86, "⚙ Settings"))        ; idx 6
+
+    c.Push(MakeSection(158, "ROBLOX")*)
+    c.Push(MakeBtn(22,  178,  86, "Buy 80R"))           ; idx 9
+    c.Push(MakeBtn(114, 178,  86, "Buy 500R"))          ; idx 10
+    c.Push(MakeBtn(206, 178,  86, "Buy 1000R"))         ; idx 11
+    c.Push(MakeBtn(298, 178,  86, "Buy 2000R"))         ; idx 12
+
+    c.Push(MakeSection(218, "DEBUG")*)
+    c.Push(MakeBtn(22,  238,  86, "Mouse Pos"))         ; idx 14
+    c.Push(MakeBtn(114, 238,  86, "Find 2FA"))          ; idx 15
+    c.Push(MakeBtn(206, 238,  86, "Win Pos"))           ; idx 16
+    c.Push(MakeBtn(298, 238,  86, "Incompat"))          ; idx 17
+
+    c[3].OnEvent("Click",  (*) => Reload())
+    c[4].OnEvent("Click",  (*) => ExitApp())
+    c[5].OnEvent("Click",  (*) => TogglePause())
+    c[6].OnEvent("Click",  (*) => ShowSettingsDialog())
+    c[9].OnEvent("Click",  (*) => GuiAction("Buy 80 Robux",  Beli80Robux))
+    c[10].OnEvent("Click", (*) => GuiAction("Buy 500 Robux", Beli500Robux))
+    c[11].OnEvent("Click", (*) => GuiAction("Buy 1000 Robux", Beli1000Robux))
+    c[12].OnEvent("Click", (*) => GuiAction("Buy 2000 Robux", Beli2000Robux))
+
+    TabControls[4] := c
+}
 
 ; ── LOG ────────────────────────────────────────────────────
 AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
-AppGui.Add("GroupBox", "x10 y369 w380 h90", "LOG")
+AppGui.Add("GroupBox", "x10 y395 w380 h90", "LOG")        ; ← 369 → 395
+
 AppGui.SetFont("s8 c222222 Norm", "Consolas")
-EditLog := AppGui.Add("Edit", "x20 y387 w362 h62 vEditLog ReadOnly -VScroll")
+EditLog := AppGui.Add("Edit", "x20 y413 w362 h62 vEditLog ReadOnly -VScroll")  ; ← 387 → 413
 
 ; ── FOOTER ─────────────────────────────────────────────────
 AppGui.SetFont("s7 c888888 Norm", "Segoe UI")
-StatsText := AppGui.Add("Text", "x12 y467 w280 vStatsText BackgroundTrans",
+StatsText := AppGui.Add("Text", "x12 y493 w220 vStatsText BackgroundTrans",
     "Sessions: 0 success / 0 total  (0%)")
 
 AppGui.SetFont("s7 cAAAAAA Norm", "Segoe UI")
-AppGui.Add("Text", "x12 y481 w380 BackgroundTrans",
-    "Ctrl+B Reload  |  Ctrl+Esc Exit  |  Ctrl+F12 Pause")
+AppGui.Add("Text", "x190 y493 w200 BackgroundTrans Right",
+    "Ctrl+B Reload | Ctrl+Esc Exit | Ctrl+F12 Pause")
 
-; ── EVENT BINDING ──────────────────────────────────────────
-b1.OnEvent("Click",  (*) => GuiAction("Login Clipboard",  DoLoginClipboard))
-b2.OnEvent("Click",  (*) => GuiAction("Login Website",    DoLoginWebsite))
-b3.OnEvent("Click",  (*) => GuiAction("PW Tele",          PwdThenBC))
-b4.OnEvent("Click",  (*) => GuiAction("PW Web",         PastePwClipboard))
-b5.OnEvent("Click",  (*) => GuiAction("Proses BC 1",      DoProsesBC1))
-b6.OnEvent("Click",  (*) => GuiAction("Proses BC 2",      BCWithIncompat))
-b7.OnEvent("Click",  (*) => GuiAction("BC Authen",        BCAuthen))
-b8.OnEvent("Click",  (*) => GuiAction("Copy BC",          CopyBackupCodes))
-b9.OnEvent("Click",  (*) => Reload())
-b10.OnEvent("Click", (*) => ExitApp())
-b11.OnEvent("Click", (*) => TogglePause())
-b12.OnEvent("Click", (*) => ShowSettingsDialog())
 AppGui.OnEvent("Close", (*) => ExitApp())
 
-; ── START ──────────────────────────────────────────────────
+; ── HIDE semua tab non-aktif saat startup ──────────────────
+loop 4 {
+    if (A_Index != 1) {
+        for ctrl in TabControls[A_Index]
+            ctrl.Visible := false
+    }
+}
+
+; ============================================================
+;  TAB SWITCHING
+; ============================================================
+TabClick(tabIndex, *) {
+    SwitchTab(tabIndex)
+}
+
+SwitchTab(tabIndex) {
+    global g_ActiveTab, TabControls
+    for ctrl in TabControls[g_ActiveTab]
+        ctrl.Visible := false
+    for ctrl in TabControls[tabIndex]
+        ctrl.Visible := true
+    g_ActiveTab := tabIndex
+}
+
+; ============================================================
+;  START
+; ============================================================
 SetLogCallback(UILog)
-EnableFileLog(false)   ; aktifkan file logging ke sigmacro.log
+EnableFileLog(false)
 UpdateStats()
-AppGui.Show("x50 y50 w400 h501")
+AppGui.Show("x50 y50 w400 h515")
 UILog("[" FormatTime(, "HH:mm:ss") "] Hotkeys enabled — Sigmacro v2.1 ready")
 
-; Cek update di background (silent, tidak popup kalau udah terbaru)
 SetTimer(() => CheckForUpdate(true), -3000)
 
 ; ── HOTKEYS ────────────────────────────────────────────────
 ^u:: HotkeyAction("Login Clipboard",  DoLoginClipboard)
 ^m:: HotkeyAction("Login Website",    DoLoginWebsite)
 ^p:: HotkeyAction("PW Tele",          PwdThenBC)
-^q:: HotkeyAction("PW Web",         PastePwClipboard)
-^o:: HotkeyAction("Proses BC 1",      DoProsesBC1)
-^e:: HotkeyAction("Proses BC 2",      BCWithIncompat)
+^q:: HotkeyAction("PW Web",           PastePwClipboard)
+^o:: HotkeyAction("BC Email",      DoProsesBC1)
+^e:: HotkeyAction("BC Retry",      BCWithIncompat)
 ^k:: HotkeyAction("BC Authen",        BCAuthen)
 ^i:: HotkeyAction("Copy BC",          CopyBackupCodes)
+^+a:: HotkeyAction("Copy BC Website", CopyBCWebsite)
+^+u:: HotkeyAction("Login Clipboard Web", DoLoginClipboardWeb)
+^+o:: HotkeyAction("BC Email Web",     DoProsesBC1Web)
+^+e:: HotkeyAction("BC Retry Web",     BCWithIncompatWeb)
+^+k:: HotkeyAction("BC Authen Web",       BCAuthenWeb)
+^+1:: HotkeyAction("Copy BC Web",         CopyBCWebsite)
+^+r:: HotkeyAction("Buy 80 Robux", Beli80Robux)
+^+8:: HotkeyAction("Buy 80 Robux",   Beli80Robux)
+^+5:: HotkeyAction("Buy 500 Robux",  Beli500Robux)
+^+2:: HotkeyAction("Buy 1000 Robux", Beli1000Robux)
+^+3:: HotkeyAction("Buy 2000 Robux", Beli2000Robux)
 ^b:: Reload()
 ^Esc:: ExitApp()
 ^F12:: TogglePause()
 
-; Debug
 ^j:: ShowMousePos()
 ^t:: DebugFind2FA()
 ^y:: DebugWinPos()
 ^0:: MsgBox(CheckIncompatible() ? "Incompatible KEDETECT" : "Tidak kedetect", "Debug")
 
-; ── PAUSE ──────────────────────────────────────────────────
+; ============================================================
+;  PAUSE
+; ============================================================
 global _paused := false
 
 TogglePause() {
@@ -162,7 +334,9 @@ TogglePause() {
     }
 }
 
-; ── DEBUG ──────────────────────────────────────────────────
+; ============================================================
+;  DEBUG
+; ============================================================
 ShowMousePos() {
     MouseGetPos(&mx, &my)
     UILog("[DEBUG] Mouse: " mx ", " my)
@@ -186,7 +360,9 @@ DebugWinPos() {
     MsgBox("Window: " title "`nX: " tx " Y: " ty " W: " tw " H: " th, "Window Pos")
 }
 
-; ── UI HELPERS ─────────────────────────────────────────────
+; ============================================================
+;  UI HELPERS
+; ============================================================
 GuiAction(name, fn) {
     global g_IsRunning
     if (g_IsRunning)

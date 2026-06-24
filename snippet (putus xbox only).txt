@@ -1,0 +1,169 @@
+(function () {
+    'use strict';
+
+    if (document.getElementById('sigma-floating-menu')) return;
+
+    // ==================== UTILS ====================
+    function debounce(fn, delay) {
+        var timer = null;
+        return function () {
+            var args = arguments, self = this;
+            clearTimeout(timer);
+            timer = setTimeout(function () { fn.apply(self, args); }, delay);
+        };
+    }
+
+    function showToast(message, type) {
+        var old = document.querySelector('.sigma-toast');
+        if (old) old.remove();
+
+        var toast = document.createElement('div');
+        toast.className = 'sigma-toast';
+        toast.textContent = message;
+        toast.style.cssText = [
+            'position:fixed;bottom:20px;right:80px;z-index:2147483647;',
+            'padding:10px 16px;border-radius:8px;color:white;',
+            'font-family:"Builder Sans",sans-serif;font-size:13px;font-weight:500;',
+            'max-width:250px;box-shadow:0 4px 12px rgba(0,0,0,0.25);pointer-events:none;',
+            'background:' + (type === 'success' ? '#10b981' : '#ef4444') + ';'
+        ].join('');
+        document.body.appendChild(toast);
+        setTimeout(function () {
+            if (toast.parentNode) toast.remove();
+        }, 2500);
+    }
+
+    // ==================== CSRF ====================
+    async function getCsrfViaChallenge(url) {
+        var challenge = await fetch(url, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        var token = challenge.headers.get('x-csrf-token');
+        if (!token) throw new Error('Gagal ambil CSRF token. Coba refresh halaman dulu.');
+        return token;
+    }
+
+    // ==================== ACTIONS ====================
+    async function xboxDisconnect() {
+        try {
+            var csrf = await getCsrfViaChallenge('https://auth.roblox.com/v1/xbox/disconnect');
+
+            var res = await fetch('https://auth.roblox.com/v1/xbox/disconnect', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
+                }
+            });
+
+            if (res.ok) {
+                showToast('✅ Xbox berhasil diputus!', 'success');
+                var xboxBtn = document.getElementById('sigma-xbox-btn');
+                if (xboxBtn) xboxBtn.style.display = 'none';
+            } else {
+                var err = await res.json().catch(function () { return {}; });
+                throw new Error(err.errors?.[0]?.message || 'HTTP ' + res.status);
+            }
+        } catch (e) {
+            showToast('❌ Gagal putus Xbox: ' + e.message, 'error');
+        }
+    }
+
+    async function checkXboxConnected() {
+        try {
+            var res = await fetch('https://auth.roblox.com/v1/xbox/connection', {
+                credentials: 'include'
+            });
+            if (res.ok) {
+                var data = await res.json();
+                return data && data.hasConnectedXboxAccount === true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    // ==================== BUILD UI ====================
+    function buildMenu() {
+        if (document.getElementById('sigma-floating-menu')) return;
+
+        var wrapper = document.createElement('div');
+        wrapper.id = 'sigma-floating-menu';
+        wrapper.style.cssText = [
+            'position:fixed;top:20px;right:20px;z-index:2147483647;',
+            'display:flex;flex-direction:column;align-items:flex-end;gap:10px;',
+            'font-family:"Builder Sans",sans-serif;'
+        ].join('');
+
+        var xboxBtn = document.createElement('button');
+        xboxBtn.id = 'sigma-xbox-btn';
+        xboxBtn.textContent = 'Putus Xbox';
+        xboxBtn.style.cssText = buildBtnStyle('none');
+        xboxBtn.addEventListener('mouseenter', function () { this.style.opacity = '0.8'; });
+        xboxBtn.addEventListener('mouseleave', function () { this.style.opacity = '1'; });
+        xboxBtn.addEventListener('click', async function () { await xboxDisconnect(); });
+
+        wrapper.appendChild(xboxBtn);
+        document.body.appendChild(wrapper);
+
+        checkXboxConnected().then(function (connected) {
+            if (connected) xboxBtn.style.display = 'block';
+        });
+    }
+
+    function buildBtnStyle(display) {
+        return [
+            'display:' + display + ';',
+            'padding:10px 16px;',
+            'font-family:"Builder Sans","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;',
+            'font-size:13px;font-weight:600;line-height:1.2;',
+            'cursor:pointer;user-select:none;',
+            'border:1px solid var(--color-action-standard-border,#bcbec8);',
+            'border-radius:10px;',
+            'background-color:var(--color-action-standard-background,#fff);',
+            'color:var(--color-action-standard-foreground,#121215);',
+            'white-space:nowrap;',
+            'box-shadow:0 4px 12px rgba(0,0,0,0.15);',
+            'transition:opacity 0.15s;'
+        ].join('');
+    }
+
+    // ==================== INIT ====================
+    function tryBuild() {
+        if (document.body && !document.getElementById('sigma-floating-menu')) {
+            buildMenu();
+            console.log('%c🚀 SigmaDOTS Loaded!', 'color:#335fff;font-weight:bold;');
+            return true;
+        }
+        return false;
+    }
+
+    if (!tryBuild()) {
+        var checkInterval = setInterval(function () {
+            if (tryBuild()) clearInterval(checkInterval);
+        }, 100);
+        setTimeout(function () { clearInterval(checkInterval); }, 15000);
+    }
+
+    // ==================== SPA NAVIGATION FIX ====================
+    var lastBuild = Date.now();
+    var navObserver = new MutationObserver(debounce(function () {
+        if (Date.now() - lastBuild > 2000 && !document.getElementById('sigma-floating-menu')) {
+            if (document.body) {
+                buildMenu();
+                lastBuild = Date.now();
+            }
+        }
+    }, 500));
+
+    if (document.body) {
+        navObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    window.addEventListener('beforeunload', function () {
+        navObserver.disconnect();
+    });
+
+})();

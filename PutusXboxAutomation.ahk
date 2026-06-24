@@ -10,7 +10,7 @@ CoordMode("Mouse", "Screen")
 SendMode("Input")
 
 ; Icon
-iconPath := A_MyDocuments "\..\Downloads\swaann\mamayo.ico"
+iconPath := A_MyDocuments "\..\Downloads\onlydits\assets\mamayo.ico"
 if FileExist(iconPath)
     TraySetIcon(iconPath)
 

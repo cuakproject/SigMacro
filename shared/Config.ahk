@@ -25,6 +25,21 @@ LoadConfig() {
     CFG["region_pwd_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_pwd_x2", 1927))
     CFG["region_pwd_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_pwd_y2", 638))
 
+    CFG["region_invalidbc_x1"] := Integer(IniRead(CFG_PATH, "Regions", "region_invalidbc_x1", 953))
+    CFG["region_invalidbc_y1"] := Integer(IniRead(CFG_PATH, "Regions", "region_invalidbc_y1", 0))
+    CFG["region_invalidbc_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_invalidbc_x2", 1927))
+    CFG["region_invalidbc_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_invalidbc_y2", 638))
+
+    CFG["region_robloxhome_x1"] := Integer(IniRead(CFG_PATH, "Regions", "region_robloxhome_x1", 0))
+    CFG["region_robloxhome_y1"] := Integer(IniRead(CFG_PATH, "Regions", "region_robloxhome_y1", 0))
+    CFG["region_robloxhome_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_robloxhome_x2", 1920))
+    CFG["region_robloxhome_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_robloxhome_y2", 1080))
+
+    CFG["region_80robux_x1"] := Integer(IniRead(CFG_PATH, "Regions", "region_80robux_x1", 0))
+    CFG["region_80robux_y1"] := Integer(IniRead(CFG_PATH, "Regions", "region_80robux_y1", 0))
+    CFG["region_80robux_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_80robux_x2", 1920))
+    CFG["region_80robux_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_80robux_y2", 1080))
+
     ; ── TIMING ────────────────────────────────────────────────
     CFG["delay_min"]      := Integer(IniRead(CFG_PATH, "Timing", "DelayMin",       200))
     CFG["delay_max"]      := Integer(IniRead(CFG_PATH, "Timing", "DelayMax",       350))

@@ -19,22 +19,30 @@ g.SetFont("s10 cCDD6F4 Bold", "Segoe UI")
 g.Add("Text", "x15 y12 w320 Center", "Pilih region yang mau di-set:")
 g.SetFont("s9 cA6E3A1 Norm", "Segoe UI")
 g.Add("Text", "x15 y34 w320 Center", "Klik tombol → klik & drag di layar → lepas")
+
 g.SetFont("s9 cCDD6F4 Bold", "Segoe UI")
 b1 := g.Add("Button", "x15  y60 w100 h34", "Incompatible")
 b2 := g.Add("Button", "x125 y60 w100 h34", "2FA Icon")
 b3 := g.Add("Button", "x235 y60 w100 h34", "Password")
-g.SetFont("s8 cF38BA8 Norm", "Segoe UI")
-statusLbl := g.Add("Text", "x15 y104 w320 Center vStatusLbl", "Belum ada region dipilih")
-g.SetFont("s8 c89B4FA Norm", "Segoe UI")
-coordLbl  := g.Add("Text", "x15 y120 w320 Center vCoordLbl",  "")
-g.SetFont("s8 cA6E3A1 Norm", "Segoe UI")
-savedLbl  := g.Add("Text", "x15 y136 w320 Center vSavedLbl",  "")
-g.OnEvent("Close", (*) => ExitApp())
-g.Show("w350 h165 x50 y50")
+b4 := g.Add("Button", "x15  y104 w100 h34", "Invalid BC")
+b5 := g.Add("Button", "x125 y104 w100 h34", "Roblox Home")
+b6 := g.Add("Button", "x235 y104 w100 h34", "80 Robux")
 
-b1.OnEvent("Click", (*) => StartDrag("incompat", "Incompatible Accounts"))
-b2.OnEvent("Click", (*) => StartDrag("2fa",      "2FA Icon"))
-b3.OnEvent("Click", (*) => StartDrag("pwd",      "Password Label"))
+g.SetFont("s8 cF38BA8 Norm", "Segoe UI")
+statusLbl := g.Add("Text", "x15 y148 w320 Center vStatusLbl", "Belum ada region dipilih")
+g.SetFont("s8 c89B4FA Norm", "Segoe UI")
+coordLbl  := g.Add("Text", "x15 y164 w320 Center vCoordLbl",  "")
+g.SetFont("s8 cA6E3A1 Norm", "Segoe UI")
+savedLbl  := g.Add("Text", "x15 y180 w320 Center vSavedLbl",  "")
+g.OnEvent("Close", (*) => ExitApp())
+g.Show("w350 h210 x50 y50")
+
+b1.OnEvent("Click", (*) => StartDrag("incompat",  "Incompatible Accounts"))
+b2.OnEvent("Click", (*) => StartDrag("2fa",       "2FA Icon"))
+b3.OnEvent("Click", (*) => StartDrag("pwd",       "Password Label"))
+b4.OnEvent("Click", (*) => StartDrag("invalidbc", "Invalid BC"))
+b5.OnEvent("Click", (*) => StartDrag("robloxhome","Roblox Home"))
+b6.OnEvent("Click", (*) => StartDrag("80robux",   "80 Robux"))
 
 StartDrag(regionKey, regionName) {
     global g_regionKey, g_regionName
@@ -58,13 +66,12 @@ DoDrag() {
 
     MouseGetPos(&x1, &y1)
 
-    ; ── 4 sisi border kotak: Top, Bottom, Left, Right ────
     thick := 2
 
-    top    := MakeBar()
-    bot    := MakeBar()
-    lft    := MakeBar()
-    rgt    := MakeBar()
+    top := MakeBar()
+    bot := MakeBar()
+    lft := MakeBar()
+    rgt := MakeBar()
 
     loop {
         if !GetKeyState("LButton", "P")
@@ -76,13 +83,9 @@ DoDrag() {
         rw := Max(Abs(cx - x1), 1)
         rh := Max(Abs(cy - y1), 1)
 
-        ; Top
         top.Move(rx, ry, rw, thick)
-        ; Bottom
         bot.Move(rx, ry + rh, rw, thick)
-        ; Left
         lft.Move(rx, ry, thick, rh)
-        ; Right
         rgt.Move(rx + rw, ry, thick, rh)
 
         Sleep(16)
@@ -118,7 +121,7 @@ DoDrag() {
 
 MakeBar() {
     bar := Gui("-Caption +ToolWindow +AlwaysOnTop +E0x20")
-    bar.BackColor := "00FF00"   ; hijau terang, gampang keliatan
+    bar.BackColor := "00FF00"
     WinSetTransparent(220, bar)
     bar.Show("x0 y0 w1 h1 NoActivate")
     return bar
