@@ -9,6 +9,8 @@ global COORD := Map(
     "bc_code1_y",       1008,
     "bc_code2_x",       1607,
     "bc_code2_y",       1007,
+    "bc_code3_x",       1550,
+    "bc_code3_y",       1009,
 
     ; ── LOGIN FIELDS ──────────────────────────────────────────
     "login_focus_x",    1689,
@@ -53,8 +55,6 @@ global COORD := Map(
     "incompat_bc_y",    470,
 
     ; ── PASSWORD LABEL OFFSET ─────────────────────────────────
-    "pwd_label_offset_x", 100,
-    "pwd_label_offset_y", 10,
     "pwd_scroll1_x",    1814,
     "pwd_scroll1_y",    803,
 

@@ -3,7 +3,7 @@
 ;  Taruh file version.txt di GitHub repo lo (isi: 2.1.0)
 ; ============================================================
 
-global CURRENT_VERSION := "2.0.0"
+global CURRENT_VERSION := "2.1.0"
 global VERSION_URL     := "https://raw.githubusercontent.com/cuakproject/sigmacro/main/version.txt"
 global RELEASE_URL     := "https://github.com/cuakproject/sigmacro/releases/latest"
 

@@ -6,15 +6,33 @@
 
 CopyBackupCodes() {
     global COORD, CFG
+
+    ; ── Copy BC Code 1 ──────────────────────────────────────
+    A_Clipboard := ""
     DirectDoubleClick(COORD["bc_code1_x"], COORD["bc_code1_y"])
-    Sleep(350)
+    Sleep(400)
     Send("^c")
-    Sleep(350)
+    ClipWait(2)
+    bc1 := A_Clipboard
+    Sleep(300)
+
+    ; ── Copy BC Code 2 ──────────────────────────────────────
+    A_Clipboard := ""
     DirectDoubleClick(COORD["bc_code2_x"], COORD["bc_code2_y"])
-    Sleep(350)
+    Sleep(400)
     Send("^c")
-    Sleep(350)
-    Log("✓ Backup codes disalin")
+    ClipWait(2)
+    bc2 := A_Clipboard
+    Sleep(300)
+
+    ; ── Copy BC Code 3 ──────────────────────────────────────
+    A_Clipboard := ""
+    DirectDoubleClick(COORD["bc_code3_x"], COORD["bc_code3_y"])
+    Sleep(400)
+    Send("^c")
+    ClipWait(2)
+    bc3 := A_Clipboard
+    Sleep(300)
 }
 
 FillBackupCodeOnly() {
@@ -33,7 +51,7 @@ FillBackupCodeOnly() {
         DirectClick(COORD["bc_random2_x"], COORD["bc_random2_y"])
     Sleep(CFG["winv_delay"])
     Send("{Enter}")
-    Log("→ Backup code diisi")
+    Log("🔄 Backup code diisi")
 }
 
 AmbilPasswordDanPaste() {
@@ -42,11 +60,13 @@ AmbilPasswordDanPaste() {
     Sleep(200)
     DirectClick(COORD["pwd_scroll1_x"], COORD["pwd_scroll1_y"])
     Sleep(300)
-    if !FindPasswordLabel(&lx, &ly) {
-        Log("✗ Label password tidak ditemukan")
+
+    if !WaitForPasswordLabel(&lx, &ly, 5000) {
+        Log("❌ Label password tidak ditemukan")
         return false
     }
-    HumanClick(lx + COORD["pwd_label_offset_x"], ly + COORD["pwd_label_offset_y"])
+
+    DirectClick(1626, ly + 9)
     Delay()
     HumanClick(COORD["winv_focus_x"],  COORD["winv_focus_y"])
     Delay()
@@ -59,7 +79,7 @@ AmbilPasswordDanPaste() {
     Send("^v")
     Delay()
     Send("{Enter}")
-    Log("✓ Password dipaste")
+    Log("✅ Password dipaste")
     return true
 }
 
@@ -69,18 +89,17 @@ ProsesBackupCode(maxRetry := 0) {
         maxRetry := CFG["bc_max_retry"]
     loop maxRetry {
         FillBackupCodeOnly()
-        Sleep(CFG["incompat_wait"])
-        if !CheckIncompatible() {
-            Log("✓ Tidak ada incompatible, selesai")
+        if !WaitForIncompatible(3000) {
+            Log("✅ Selesai, tidak ada incompatible")
             break
         }
-        Log("⚠ Incompatible, retry " A_Index "/" maxRetry)
+        Log("⚠️ Incompatible, retry " A_Index "/" maxRetry)
         if !AmbilPasswordDanPaste() {
-            Log("✗ Gagal ambil password")
+            Log("❌ Gagal ambil password")
             break
         }
         if !WaitForTwoStepPage() {
-            Log("✗ 2FA tidak muncul")
+            Log("❌ 2FA tidak muncul")
             break
         }
         Delay()
@@ -90,13 +109,10 @@ ProsesBackupCode(maxRetry := 0) {
 BCAuthen() {
     global COORD, CFG
     CopyBackupCodes()
-    Log("→ Klik use another verification method")
     HumanClick(COORD["authen_alt_x"],   COORD["authen_alt_y"])
     Delay()
-    Log("→ Klik opsi backup code")
     HumanClick(COORD["authen_bc_opt_x"], COORD["authen_bc_opt_y"])
     Delay()
-    Log("→ Paste backup code")
     Send("#v")
     Sleep(CFG["winv_delay"])
     if (RandInt(1, 2) = 1)
@@ -105,20 +121,20 @@ BCAuthen() {
         DirectClick(COORD["bc_random2_x"], COORD["bc_random2_y"])
     Sleep(CFG["winv_delay"])
     Send("{Enter}")
-    Log("→ Backup code diisi via Authen")
+    Log("🔄 Backup code diisi via Authen")
     Sleep(CFG["incompat_wait"])
     if CheckIncompatible() {
-        Log("⚠ Incompatible terdeteksi, ambil password...")
+        Log("⚠️ Incompatible terdeteksi")
         if AmbilPasswordDanPaste() {
             if WaitForTwoStepPage() {
                 Delay()
                 ProsesBackupCode()
             } else
-                Log("✗ Halaman 2FA tidak terdeteksi")
+                Log("❌ 2FA tidak terdeteksi")
         } else
-            Log("✗ Gagal ambil password")
+            Log("❌ Gagal ambil password")
     } else
-        Log("✓ Tidak ada incompatible, selesai")
+        Log("✅ Selesai")
 }
 
 DoLoginClipboard() {
@@ -152,13 +168,13 @@ DoLoginClipboard() {
     DirectClick(COORD["login_submit2_x"], COORD["login_submit2_y"])
     RandSleep(CFG["submit_delay"], CFG["submit_delay"] + 100)
     Send("{Enter}")
-    Log("→ Login clipboard dikirim")
+    Log("🚀 Login clipboard dikirim")
     CopyBackupCodes()
     if WaitForTwoStepPage() {
         Delay()
         ProsesBackupCode()
     } else
-        Log("✗ Halaman 2FA tidak terdeteksi")
+        Log("❌ 2FA tidak terdeteksi")
 }
 
 DoLoginWebsite() {
@@ -198,16 +214,18 @@ DoLoginWebsite() {
     DirectClick(COORD["login_submit2_x"], COORD["login_submit2_y"])
     RandSleep(CFG["submit_delay"], CFG["submit_delay"] + 100)
     Send("{Enter}")
-    Log("→ Login website dikirim")
+    Log("🚀 Login website dikirim")
     if WaitForTwoStepPage() {
         Delay()
         ProsesBackupCode()
     } else
-        Log("✗ Halaman 2FA tidak terdeteksi")
+        Log("❌ 2FA tidak terdeteksi")
 }
 
 PastePwClipboard() {
     global COORD, CFG
+    DirectClick(578, 333)
+    Sleep(200)
     HumanClick(COORD["winv_focus_x"],  COORD["winv_focus_y"])
     Delay()
     HumanClick(COORD["login_pass2_x"], COORD["login_pass2_y"])
@@ -219,8 +237,16 @@ PastePwClipboard() {
     Send("^v")
     Delay()
     Send("{Enter}")
-    Log("→ Paste PW clipboard selesai")
+    Log("🚀 Paste PW selesai")
+    CopyBackupCodes()
+    if !WaitForTwoStepPage() {
+        Log("❌ 2FA tidak terdeteksi")
+        return
+    }
+    Delay()
+    ProsesBackupCode()
 }
+
 
 PastePwTelegram() {
     global COORD, CFG
@@ -239,12 +265,12 @@ PastePwTelegram() {
     Send("^v")
     Delay()
     Send("{Enter}")
-    Log("→ Paste PW Telegram selesai")
+    Log("🚀 Paste PW Telegram selesai")
     if WaitForTwoStepPage() {
         Delay()
         ProsesBackupCode()
     } else
-        Log("✗ Halaman 2FA tidak terdeteksi")
+        Log("❌ 2FA tidak terdeteksi")
 }
 
 PwdThenBC() {
@@ -254,7 +280,7 @@ PwdThenBC() {
             Delay()
             ProsesBackupCode()
         } else
-            Log("✗ 2FA tidak muncul")
+            Log("❌ 2FA tidak muncul")
     }
 }
 
@@ -275,15 +301,22 @@ BCWithIncompat() {
         DirectClick(COORD["bc_random2_x"], COORD["bc_random2_y"])
     Sleep(CFG["winv_delay"])
     Send("{Enter}")
-    Sleep(CFG["incompat_wait"])
-    if CheckIncompatible() {
-        if AmbilPasswordDanPaste() {
-            if WaitForTwoStepPage() {
-                Delay()
-                ProsesBackupCode()
-            }
-        }
+    if !WaitForIncompatible(3000) {
+        Log("✅ Selesai, tidak ada incompatible")
+        return
     }
+    Log("⚠️ Incompatible terdeteksi")
+    if !AmbilPasswordDanPaste() {
+        Log("❌ Gagal ambil password")
+        return
+    }
+    CopyBackupCodes()
+    if !WaitForTwoStepPage() {
+        Log("❌ 2FA tidak terdeteksi")
+        return
+    }
+    Delay()
+    ProsesBackupCode()
 }
 
 DoProsesBC1() {

@@ -92,15 +92,60 @@ WaitInRegion(imagePath, timeoutMs := 0, tolerances := "") {
 }
 
 CheckIncompatible() {
-    return FindInRegion(A_ScriptDir "\incompatible.png", &fx, &fy, "30,50,70,90,110,130")
+    global CFG
+    return FindImage(A_ScriptDir "\image\incompatible.png",
+        CFG["region_incompat_x1"], CFG["region_incompat_y1"],
+        CFG["region_incompat_x2"], CFG["region_incompat_y2"],
+        &fx, &fy, "30,50,70,90,110,130")
+}
+
+WaitForIncompatible(timeoutMs := 3000) {
+    elapsed := 0
+    Loop {
+        if CheckIncompatible()
+            return true
+        Sleep(16)
+        elapsed += 16
+        if (elapsed >= timeoutMs)
+            return false
+    }
 }
 
 WaitForTwoStepPage(timeoutMs := 0) {
-    return WaitInRegion(A_ScriptDir "\twostep_icon.png", timeoutMs)
+    global CFG
+    if (timeoutMs = 0)
+        timeoutMs := CFG["tfa_timeout"]
+    elapsed := 0
+    Loop {
+        if FindImage(A_ScriptDir "\image\twostep_icon.png",
+            CFG["region_2fa_x1"], CFG["region_2fa_y1"],
+            CFG["region_2fa_x2"], CFG["region_2fa_y2"],
+            &fx, &fy, CFG["img_tol_fast"])
+            return true
+        Sleep(16)
+        elapsed += 16
+        if (elapsed >= timeoutMs)
+            return false
+    }
 }
 
+
 FindPasswordLabel(&outX, &outY) {
-    WinGetPos(&wx, &wy, &ww, &wh, "A")
-    return FindBottomImage(A_ScriptDir "\label_password.png",
-                           wx, wy, wx+ww, wy+wh, &outX, &outY)
+    global CFG
+    return FindBottomImage(A_ScriptDir "\image\label_password.png",
+        CFG["region_pwd_x1"], CFG["region_pwd_y1"],
+        CFG["region_pwd_x2"], CFG["region_pwd_y2"],
+        &outX, &outY)
+}
+
+WaitForPasswordLabel(&outX, &outY, timeoutMs := 5000) {
+    elapsed := 0
+    Loop {
+        if FindPasswordLabel(&outX, &outY)
+            return true
+        Sleep(80)
+        elapsed += 80
+        if (elapsed >= timeoutMs)
+            return false
+    }
 }

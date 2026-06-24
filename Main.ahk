@@ -34,7 +34,7 @@ EnsureDefaultConfig()
 LoadConfig()
 LoadStats()
 
-iconPath := A_MyDocuments "\..\Downloads\sigmacro\mamayo.ico"
+iconPath := A_MyDocuments "\..\Downloads\OnlyDits\assets\mamayo.ico"
 if FileExist(iconPath)
     TraySetIcon(iconPath)
 
@@ -44,17 +44,17 @@ global g_TotalAttempts  ; diset oleh LoadStats()
 global g_SuccessCount   ; diset oleh LoadStats()
 
 ; ── GUI ────────────────────────────────────────────────────
-global AppGui := Gui("+AlwaysOnTop", "Ditsyy v2.1")
+global AppGui := Gui("+AlwaysOnTop", "OnlyDits v2.1")
 global StatusText, EditLog, StatsText
 
 AppGui.BackColor := "F0F0F0"
 
 ; Header
 AppGui.SetFont("s14 c222222 Bold", "Segoe UI")
-AppGui.Add("Text", "x10 y8 w380 Center BackgroundTrans", "Ditsy v2.1")
+AppGui.Add("Text", "x10 y8 w380 Center BackgroundTrans", "OnlyDits v2.1")
 
 AppGui.SetFont("s8 c888888 Norm", "Segoe UI")
-AppGui.Add("Text", "x10 y32 w380 Center BackgroundTrans", "Automation Tool - Sigma")
+AppGui.Add("Text", "x10 y32 w380 Center BackgroundTrans", "Vilog Automation Tool")
 
 AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
 StatusText := AppGui.Add("Text", "x10 y50 w380 Center vStatusText BackgroundTrans", "Ready")
@@ -66,7 +66,7 @@ AppGui.SetFont("s9 c000000 Norm", "Segoe UI")
 b1 := AppGui.Add("Button", "x22 y88  w178 h30", "Login Clipboard")
 b2 := AppGui.Add("Button", "x206 y88  w178 h30", "Login Website")
 b3 := AppGui.Add("Button", "x22 y124 w178 h30", "PW Tele")
-b4 := AppGui.Add("Button", "x206 y124 w178 h30", "Paste PW")
+b4 := AppGui.Add("Button", "x206 y124 w178 h30", "PW Web")
 
 ; ── GROUP: BACKUP CODE ─────────────────────────────────────
 AppGui.SetFont("s9 c444444 Bold", "Segoe UI")
@@ -105,7 +105,7 @@ AppGui.Add("Text", "x12 y481 w380 BackgroundTrans",
 b1.OnEvent("Click",  (*) => GuiAction("Login Clipboard",  DoLoginClipboard))
 b2.OnEvent("Click",  (*) => GuiAction("Login Website",    DoLoginWebsite))
 b3.OnEvent("Click",  (*) => GuiAction("PW Tele",          PwdThenBC))
-b4.OnEvent("Click",  (*) => GuiAction("Paste PW",         PastePwClipboard))
+b4.OnEvent("Click",  (*) => GuiAction("PW Web",         PastePwClipboard))
 b5.OnEvent("Click",  (*) => GuiAction("Proses BC 1",      DoProsesBC1))
 b6.OnEvent("Click",  (*) => GuiAction("Proses BC 2",      BCWithIncompat))
 b7.OnEvent("Click",  (*) => GuiAction("BC Authen",        BCAuthen))
@@ -118,7 +118,7 @@ AppGui.OnEvent("Close", (*) => ExitApp())
 
 ; ── START ──────────────────────────────────────────────────
 SetLogCallback(UILog)
-EnableFileLog(true)   ; aktifkan file logging ke sigmacro.log
+EnableFileLog(false)   ; aktifkan file logging ke sigmacro.log
 UpdateStats()
 AppGui.Show("x50 y50 w400 h501")
 UILog("[" FormatTime(, "HH:mm:ss") "] Hotkeys enabled — Sigmacro v2.1 ready")
@@ -130,7 +130,7 @@ SetTimer(() => CheckForUpdate(true), -3000)
 ^u:: HotkeyAction("Login Clipboard",  DoLoginClipboard)
 ^m:: HotkeyAction("Login Website",    DoLoginWebsite)
 ^p:: HotkeyAction("PW Tele",          PwdThenBC)
-^q:: HotkeyAction("Paste PW",         PastePwClipboard)
+^q:: HotkeyAction("PW Web",         PastePwClipboard)
 ^o:: HotkeyAction("Proses BC 1",      DoProsesBC1)
 ^e:: HotkeyAction("Proses BC 2",      BCWithIncompat)
 ^k:: HotkeyAction("BC Authen",        BCAuthen)

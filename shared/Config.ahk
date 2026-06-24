@@ -9,6 +9,22 @@ global CFG_PATH := A_ScriptDir "\sigmacro.ini"
 LoadConfig() {
     global CFG, CFG_PATH, COORD
 
+    ; ── REGIONS (dari RegionSelector) ─────────────────────────
+    CFG["region_incompat_x1"] := Integer(IniRead(CFG_PATH, "Regions", "region_incompat_x1", 953))
+    CFG["region_incompat_y1"] := Integer(IniRead(CFG_PATH, "Regions", "region_incompat_y1", 0))
+    CFG["region_incompat_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_incompat_x2", 1927))
+    CFG["region_incompat_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_incompat_y2", 638))
+
+    CFG["region_2fa_x1"] := Integer(IniRead(CFG_PATH, "Regions", "region_2fa_x1", 953))
+    CFG["region_2fa_y1"] := Integer(IniRead(CFG_PATH, "Regions", "region_2fa_y1", 0))
+    CFG["region_2fa_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_2fa_x2", 1927))
+    CFG["region_2fa_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_2fa_y2", 638))
+
+    CFG["region_pwd_x1"] := Integer(IniRead(CFG_PATH, "Regions", "region_pwd_x1", 953))
+    CFG["region_pwd_y1"] := Integer(IniRead(CFG_PATH, "Regions", "region_pwd_y1", 0))
+    CFG["region_pwd_x2"] := Integer(IniRead(CFG_PATH, "Regions", "region_pwd_x2", 1927))
+    CFG["region_pwd_y2"] := Integer(IniRead(CFG_PATH, "Regions", "region_pwd_y2", 638))
+
     ; ── TIMING ────────────────────────────────────────────────
     CFG["delay_min"]      := Integer(IniRead(CFG_PATH, "Timing", "DelayMin",       200))
     CFG["delay_max"]      := Integer(IniRead(CFG_PATH, "Timing", "DelayMax",       350))
