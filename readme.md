@@ -6,7 +6,7 @@
 
 ## Daftar Isi
 
-- [Tentang Proyek](#tentang-proyek)
+- [Tentang Proyek](#tentang-project)
 - [Fitur](#fitur)
 - [Persyaratan](#persyaratan)
 - [Instalasi](#instalasi)
