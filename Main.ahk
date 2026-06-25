@@ -232,10 +232,14 @@ MakeBtn(x, y, w, label) {
     c.Push(MakeBtn(298, 178,  86, "Buy 2000R"))         ; idx 12
 
     c.Push(MakeSection(218, "DEBUG")*)
-    c.Push(MakeBtn(22,  238,  86, "Mouse Pos"))         ; idx 14
-    c.Push(MakeBtn(114, 238,  86, "Find 2FA"))          ; idx 15
-    c.Push(MakeBtn(206, 238,  86, "Win Pos"))           ; idx 16
-    c.Push(MakeBtn(298, 238,  86, "Incompat"))          ; idx 17
+    c.Push(MakeBtn(22,  238,  86, "Mouse Pos"))         ; idx 15
+    c.Push(MakeBtn(114, 238,  86, "Find 2FA"))          ; idx 16
+    c.Push(MakeBtn(206, 238,  86, "Win Pos"))           ; idx 17
+    c.Push(MakeBtn(298, 238,  86, "Incompat"))          ; idx 18
+
+    c.Push(MakeSection(278, "SHEET")*)
+    c.Push(MakeBtn(22,  298,  86, "Sheet Done"))        ; idx 21 
+    c.Push(MakeBtn(114, 298,  86, "Sheet Belom"))       ; idx 22
 
     c[3].OnEvent("Click",  (*) => Reload())
     c[4].OnEvent("Click",  (*) => ExitApp())
@@ -245,6 +249,12 @@ MakeBtn(x, y, w, label) {
     c[10].OnEvent("Click", (*) => GuiAction("Buy 500 Robux", Beli500Robux))
     c[11].OnEvent("Click", (*) => GuiAction("Buy 1000 Robux", Beli1000Robux))
     c[12].OnEvent("Click", (*) => GuiAction("Buy 2000 Robux", Beli2000Robux))
+    c[15].OnEvent("Click", (*) => ShowMousePos())
+    c[16].OnEvent("Click", (*) => DebugFind2FA())
+    c[17].OnEvent("Click", (*) => DebugWinPos())
+    c[18].OnEvent("Click", (*) => MsgBox(CheckIncompatible() ? "Incompatible KEDETECT" : "Tidak kedetect", "Debug"))
+    c[21].OnEvent("Click", (*) => HotkeySheetDone())    ; Sheet Done
+    c[22].OnEvent("Click", (*) => HotkeySheetBelom())   ; Sheet Belom
 
     TabControls[4] := c
 }
@@ -326,6 +336,10 @@ SetTimer(() => CheckForUpdate(true), -3000)
 ^!2:: HotkeyAction("Buy 1000 Robux", Beli1000Robux)
 ^!3:: HotkeyAction("Buy 2000 Robux", Beli2000Robux)
 
+; SHEET
+$^e:: HotkeyAction("Sheet Done", HotkeySheetDone)
+^q:: HotkeyAction("Sheet Belom", HotkeySheetBelom)
+
 ; SYSTEM (tetap)
 ^b:: Reload()
 ^Esc:: ExitApp()
@@ -377,7 +391,7 @@ DebugFind2FA() {
 
 DebugWinPos() {
     WinGetPos(&tx, &ty, &tw, &th, "A")
-    WinGetTitle(&title, "A")
+    title := WinGetTitle("A")  ; tanpa &, langsung return string
     UILog("[DEBUG] Window: " SubStr(title, 1, 30) " | " tw "x" th)
     MsgBox("Window: " title "`nX: " tx " Y: " ty " W: " tw " H: " th, "Window Pos")
 }

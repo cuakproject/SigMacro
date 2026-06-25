@@ -568,3 +568,42 @@ Beli1000Robux() {
 Beli2000Robux() {
     return BeliRobux("2000robux.png", "2000 Robux")
 }
+
+; Goole Sheets Shortcut
+; ────────────────────────────────────────────────────────────
+;  CTRL+D — done in sheets kalo status di atasnya "Done"
+HotkeySheetDone() {
+    directClick(814,18)
+    Sleep(100)
+    Send("{Left}")
+    Sleep(100)
+    Send("{Left}")
+    Sleep(200)
+    Send("^{d}")
+    Sleep(200)
+    Send("^{Left}")
+    Sleep(200)
+    Send("{Space}")
+}
+
+; ────────────────────────────────────────────────────────────
+;  CTRL+E — done in sheets kalo status di atasnya "Belom"
+HotkeySheetBelom() {
+    directClick(814,18)
+    Sleep(100)
+    Send("{Left}")
+    Sleep(100)
+    Send("{Left}")
+    Sleep(100)
+    Send("d")
+    Sleep(300)
+    Send("{Down}")
+    Sleep(200)
+    Send("{Enter}")
+    Sleep(200)
+    Send("{Up}")
+    Sleep(50)
+    Send("^{Left}")
+    Sleep(200)
+    Send("{Space}")
+}
