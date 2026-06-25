@@ -1,6 +1,6 @@
 # SigMacro v2.1
 
-> Automation tool berbasis AutoHotkey v2 untuk mempercepat alur login dan manajemen backup code pada platform Sigma/Roblox.
+> Automation tool berbasis AutoHotkey v2 untuk mempercepat alur login dan manajemen backup code pada game Roblox.
 
 ---
 
