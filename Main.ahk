@@ -95,8 +95,8 @@ MakeBtn(x, y, w, label) {
 {
     c := []
     c.Push(MakeSection(98,  "LOGIN (WEB)")*)
-    c.Push(MakeBtn(22,  118, 178, "Login Clipboard Web"))   ; idx 3
-    c.Push(MakeBtn(206, 118, 178, "Login Website"))     ; idx 4
+    c.Push(MakeBtn(22,  118, 178, "Login Website"))   ; idx 3
+    c.Push(MakeBtn(206, 118, 178, "Clipboard Login Web"))     ; idx 4
     c.Push(MakeBtn(22,  154, 178, "PW Web"))            ; idx 5
 
     c.Push(MakeSection(194, "BACKUP CODE (WEB)")*)
@@ -116,9 +116,9 @@ MakeBtn(x, y, w, label) {
     c.Push(MakeBtn(114, 370,  86, "✕ Exit"))            ; idx 21
     c.Push(MakeBtn(206, 370, 178, "⚙ Settings"))        ; idx 22
 
-    c[3].OnEvent("Click",  (*) => GuiAction("Login Clipboard Web", DoLoginClipboardWeb))
-    c[4].OnEvent("Click",  (*) => GuiAction("Login Website",   DoLoginWebsite))
-    c[5].OnEvent("Click",  (*) => GuiAction("PW Web",          PastePwClipboard))
+    c[3].OnEvent("Click",  (*) => GuiAction("Login Website", DoLoginWebsite))
+    c[4].OnEvent("Click",  (*) => GuiAction("Clipboard Login Web", DoLoginClipboardWeb))
+    c[5].OnEvent("Click",  (*) => GuiAction("PW Web",          PastePwClipboardWeb))
     c[8].OnEvent("Click",  (*) => GuiAction("BC Email Web",   DoProsesBC1Web))
     c[9].OnEvent("Click",  (*) => GuiAction("BC Retry Web",   BCWithIncompatWeb))
     c[10].OnEvent("Click", (*) => GuiAction("BC Authen Web",  BCAuthenWeb))
@@ -138,7 +138,7 @@ MakeBtn(x, y, w, label) {
 {
     c := []
     c.Push(MakeSection(98,  "LOGIN (TELE)")*)
-    c.Push(MakeBtn(22,  118, 178, "Login Clipboard Tele"))   ; idx 3
+    c.Push(MakeBtn(22,  118, 178, "Clipboard Login Tele"))   ; idx 3
     c.Push(MakeBtn(206, 118, 178, "PW Tele"))           ; idx 4
 
     c.Push(MakeSection(158, "BACKUP CODE (TELE)")*)
@@ -158,7 +158,7 @@ MakeBtn(x, y, w, label) {
     c.Push(MakeBtn(114, 334,  86, "✕ Exit"))            ; idx 20
     c.Push(MakeBtn(206, 334, 178, "⚙ Settings"))        ; idx 21
 
-    c[3].OnEvent("Click",  (*) => GuiAction("Login Clipboard Tele", DoLoginClipboard))
+    c[3].OnEvent("Click",  (*) => GuiAction("Clipboard Login Tele", DoLoginClipboard))
     c[4].OnEvent("Click",  (*) => GuiAction("PW Tele",         PwdThenBC))
     c[7].OnEvent("Click",  (*) => GuiAction("BC Email Tele",   DoProsesBC1))
     c[8].OnEvent("Click",  (*) => GuiAction("BC Retry Tele",   BCWithIncompat))
@@ -240,6 +240,7 @@ MakeBtn(x, y, w, label) {
     c.Push(MakeSection(278, "SHEET")*)
     c.Push(MakeBtn(22,  298,  86, "Sheet Done"))        ; idx 21 
     c.Push(MakeBtn(114, 298,  86, "Sheet Belom"))       ; idx 22
+    c.Push(MakeBtn(205, 298,  86, "Login di Web"))       ; idx 23
 
     c[3].OnEvent("Click",  (*) => Reload())
     c[4].OnEvent("Click",  (*) => ExitApp())
@@ -255,6 +256,7 @@ MakeBtn(x, y, w, label) {
     c[18].OnEvent("Click", (*) => MsgBox(CheckIncompatible() ? "Incompatible KEDETECT" : "Tidak kedetect", "Debug"))
     c[21].OnEvent("Click", (*) => HotkeySheetDone())    ; Sheet Done
     c[22].OnEvent("Click", (*) => HotkeySheetBelom())   ; Sheet Belom
+    c[23].OnEvent("Click", (*) => HotkeyAction("Login di Web", LoginWebRoblox))   ; Web Roblox
 
     TabControls[4] := c
 }
@@ -335,21 +337,30 @@ SetTimer(() => CheckForUpdate(true), -3000)
 ^!5:: HotkeyAction("Buy 500 Robux",  Beli500Robux)
 ^!2:: HotkeyAction("Buy 1000 Robux", Beli1000Robux)
 ^!3:: HotkeyAction("Buy 2000 Robux", Beli2000Robux)
+^+l:: HotkeyAction("Login di Web", LoginWebRoblox)
 
 ; SHEET
 $^e:: HotkeyAction("Sheet Done", HotkeySheetDone)
 ^q:: HotkeyAction("Sheet Belom", HotkeySheetBelom)
 
 ; SYSTEM (tetap)
-^b:: Reload()
+F12:: Reload()
 ^Esc:: ExitApp()
-^F12:: TogglePause()
+^B:: TogglePause()
 
 ; DEBUG
 ^!j:: ShowMousePos()
 ^!t:: DebugFind2FA()
 ^!y:: DebugWinPos()
 ^!0:: MsgBox(CheckIncompatible() ? "Incompatible KEDETECT" : "Tidak kedetect", "Debug")
+^j:: {
+    MouseGetPos(&mx, &my)
+    col := PixelGetColor(mx, my, "RGB")
+    hex := Format("0x{:06X}", col)
+    UILog("[PIXEL] x=" mx " y=" my " color=" hex)
+    MsgBox("X: " mx "`nY: " my "`nColor: " hex, "PixelGetColor Debug")
+    A_Clipboard := hex
+}
 
 ; ============================================================
 ;  PAUSE

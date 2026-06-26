@@ -185,6 +185,14 @@ CheckRobloxHome() {
         &fx, &fy, CFG["img_tol_fast"])
 }
 
+CheckRobloxHome2() {
+    global CFG
+    return FindImage(A_ScriptDir "\image\roblox_home_dark.png",        ; ← ganti nama file sesuai punyamu
+        CFG["region_robloxhome_x1"], CFG["region_robloxhome_y1"],
+        CFG["region_robloxhome_x2"], CFG["region_robloxhome_y2"],
+        &fx, &fy, CFG["img_tol_fast"])
+}
+
 FindRobuxItem(imageName, &outX, &outY) {
     global CFG
     ; Coba light dulu

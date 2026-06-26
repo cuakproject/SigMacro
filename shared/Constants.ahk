@@ -23,8 +23,8 @@ global COORD := Map(
     ; ── LOGIN FIELDS ──────────────────────────────────────────
     "login_focus_x",    1689,
     "login_focus_y",    377,
-    "login_user_x",     1407,
-    "login_user_y",     343,
+    "login_user_x",     1293,
+    "login_user_y",     345,
     "login_pass_x",     1434,
     "login_pass_y",     411,
     "login_pass2_x",    1441,
@@ -81,6 +81,23 @@ global COORD := Map(
     "web_tab2_y",       329,
     "web_tab3_x",       647,
     "web_tab3_y",       384,
+
+    ; ── INCOMPATIBLE ACCOUNT KLIK ────────────────────────
+    "incompatible_x", 1442,
+    "incompatible_y", 402,
+
+    "form_password_x",  1436,
+    "form_password_y",  410,
+
+    ; ── WEBSITE ROBLOX LOGIN (BROWSER CLICKS) ────────────────────────
+    "web_focus_x",      473,
+    "web_focus_y",      980,
+    "web_user_x",      448,
+    "web_user_y",      738,
+    "web_pass_x",      469,
+    "web_pass_y",      794,
+    "web_login_x",     477,
+    "web_login_y",     892,
 
     ; ── KLIK BC DI WEBSITE  ────────────────────────
     "web_bc1_x",        312,
