@@ -98,38 +98,41 @@ MakeBtn(x, y, w, label) {
     c.Push(MakeBtn(22,  118, 178, "Login Website"))   ; idx 3
     c.Push(MakeBtn(206, 118, 178, "Clipboard Login Web"))     ; idx 4
     c.Push(MakeBtn(22,  154, 178, "PW Web"))            ; idx 5
+    c.Push(MakeBtn(206, 154, 178, "Login di Web"))     ; idx 6
+
 
     c.Push(MakeSection(194, "BACKUP CODE (WEB)")*)
-    c.Push(MakeBtn(22,  214, 178, "BC Email Web"))      ; idx 8
-    c.Push(MakeBtn(206, 214, 178, "BC Retry Web"))      ; idx 9
-    c.Push(MakeBtn(22,  250, 178, "BC Authen Web"))     ; idx 10
-    c.Push(MakeBtn(206, 250, 178, "Copy BC Web"))       ; idx 11
+    c.Push(MakeBtn(22,  214, 178, "BC Email Web"))      ; idx 9
+    c.Push(MakeBtn(206, 214, 178, "BC Retry Web"))      ; idx 10
+    c.Push(MakeBtn(22,  250, 178, "BC Authen Web"))     ; idx 11
+    c.Push(MakeBtn(206, 250, 178, "Copy BC Web"))       ; idx 12
 
     c.Push(MakeSection(290, "ROBUX PURCHASE")*)
-    c.Push(MakeBtn(22,  310,  86, "Buy 80R"))           ; idx 14
-    c.Push(MakeBtn(114, 310,  86, "Buy 500R"))          ; idx 15
-    c.Push(MakeBtn(206, 310,  86, "Buy 1000R"))         ; idx 16
-    c.Push(MakeBtn(298, 310,  86, "Buy 2000R"))         ; idx 17
+    c.Push(MakeBtn(22,  310,  86, "Buy 80R"))           ; idx 15
+    c.Push(MakeBtn(114, 310,  86, "Buy 500R"))          ; idx 16
+    c.Push(MakeBtn(206, 310,  86, "Buy 1000R"))         ; idx 17
+    c.Push(MakeBtn(298, 310,  86, "Buy 2000R"))         ; idx 18
 
     c.Push(MakeSection(350, "TOOLS")*)
-    c.Push(MakeBtn(22,  370,  86, "↺ Reload"))          ; idx 20
-    c.Push(MakeBtn(114, 370,  86, "✕ Exit"))            ; idx 21
-    c.Push(MakeBtn(206, 370, 178, "⚙ Settings"))        ; idx 22
+    c.Push(MakeBtn(22,  370,  86, "↺ Reload"))          ; idx 21
+    c.Push(MakeBtn(114, 370,  86, "✕ Exit"))            ; idx 22
+    c.Push(MakeBtn(206, 370, 178, "⚙ Settings"))        ; idx 23
 
     c[3].OnEvent("Click",  (*) => GuiAction("Login Website", DoLoginWebsite))
     c[4].OnEvent("Click",  (*) => GuiAction("Clipboard Login Web", DoLoginClipboardWeb))
     c[5].OnEvent("Click",  (*) => GuiAction("PW Web",          PastePwClipboardWeb))
-    c[8].OnEvent("Click",  (*) => GuiAction("BC Email Web",   DoProsesBC1Web))
-    c[9].OnEvent("Click",  (*) => GuiAction("BC Retry Web",   BCWithIncompatWeb))
-    c[10].OnEvent("Click", (*) => GuiAction("BC Authen Web",  BCAuthenWeb))
-    c[11].OnEvent("Click", (*) => GuiAction("Copy BC Web",    CopyBCWebsite))
-    c[14].OnEvent("Click", (*) => GuiAction("Buy 80 Robux",  Beli80Robux))
-    c[15].OnEvent("Click", (*) => GuiAction("Buy 500 Robux", Beli500Robux))
-    c[16].OnEvent("Click", (*) => GuiAction("Buy 1000 Robux", Beli1000Robux))
-    c[17].OnEvent("Click", (*) => GuiAction("Buy 2000 Robux", Beli2000Robux))
-    c[20].OnEvent("Click", (*) => Reload())
-    c[21].OnEvent("Click", (*) => ExitApp())
-    c[22].OnEvent("Click", (*) => ShowSettingsDialog())
+    c[6].OnEvent("Click",  (*) => GuiAction("Login di Web",    LoginWebRoblox))
+    c[9].OnEvent("Click",  (*) => GuiAction("BC Email Web",   DoProsesBC1Web))
+    c[10].OnEvent("Click",  (*) => GuiAction("BC Retry Web",   BCWithIncompatWeb))
+    c[11].OnEvent("Click", (*) => GuiAction("BC Authen Web",  BCAuthenWeb))
+    c[12].OnEvent("Click", (*) => GuiAction("Copy BC Web",    CopyBCWebsite))
+    c[15].OnEvent("Click", (*) => GuiAction("Buy 80 Robux",  Beli80Robux))
+    c[16].OnEvent("Click", (*) => GuiAction("Buy 500 Robux", Beli500Robux))
+    c[17].OnEvent("Click", (*) => GuiAction("Buy 1000 Robux", Beli1000Robux))
+    c[18].OnEvent("Click", (*) => GuiAction("Buy 2000 Robux", Beli2000Robux))
+    c[21].OnEvent("Click", (*) => Reload())
+    c[22].OnEvent("Click", (*) => ExitApp())
+    c[23].OnEvent("Click", (*) => ShowSettingsDialog())
 
     TabControls[1] := c
 }
