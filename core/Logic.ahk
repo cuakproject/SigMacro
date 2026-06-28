@@ -1134,41 +1134,31 @@ SaveHBitmapToPng(hBitmap, filePath) {
 ShowSSToast(hBitmap, srcW, srcH) {
     toastW   := 240
     margin   := 12
-    infoH    := 32
 
-    ; Preview height ikut aspect ratio asli
+    ; Height ikut aspect ratio
     previewH := Integer(toastW * srcH / srcW)
-    ; Cap maksimal 160px biar tidak terlalu tinggi
     if (previewH > 160)
         previewH := 160
-    toastH := previewH + infoH
 
     monW := SysGet(0)
     monH := SysGet(1)
     taskbarH := 48
 
     toastX := monW - toastW - margin
-    toastY := monH - toastH - taskbarH - margin
+    toastY := monH - previewH - taskbarH - margin
 
     tmpPath := A_Temp "\sigmacro_ss_preview.png"
     SaveHBitmapToPng(hBitmap, tmpPath)
     DllCall("DeleteObject", "Ptr", hBitmap)
 
     toast := Gui("-Caption +ToolWindow +AlwaysOnTop -DPIScale")
-    toast.BackColor := "1E1E1E"
+    toast.BackColor := "000000"
     toast.MarginX := 0
     toast.MarginY := 0
 
-    ; Preview full width, height pas dengan aspect ratio → tidak ada gap
     toast.Add("Pic", "x0 y0 w" toastW " h" previewH, tmpPath)
 
-    ; Info bar bawah
-    toast.SetFont("s8 cFFFFFF Norm", "Segoe UI")
-    toast.Add("Text",
-        "x8 y" (previewH + 7) " w" (toastW - 16) " h18 BackgroundTrans",
-        "📋  " srcW "×" srcH "  —  Di Screenshot!")
-
-    toast.Show("x" toastX " y" toastY " w" toastW " h" toastH " NoActivate")
+    toast.Show("x" toastX " y" toastY " w" toastW " h" previewH " NoActivate")
 
     SetTimer(() => FadeOutToast(toast, tmpPath), -2500)
 }
