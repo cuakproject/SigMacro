@@ -1045,7 +1045,9 @@ HotkeySheetBelom() {
 
     HumanDoubleClick(1494, 377)
     RandSleep(60, 140)
+}
 
+/* ; klik tele dan enter (tambahin kalo mau)
     Sleep(150)
     DirectClick(1352, 806)
     Sleep(150)
@@ -1056,4 +1058,152 @@ HotkeySheetBelom() {
     Send("{Backspace}")
     Sleep(350)
     Send("{Enter}")
+*/
+
+; ── Screenshot region dari INI ────────────────────────────
+; ── Screenshot region → clipboard + toast preview ─────────
+CaptureScreenshotRegion() {
+    global CFG
+
+    x1 := CFG["region_screenshot_x1"]
+    y1 := CFG["region_screenshot_y1"]
+    x2 := CFG["region_screenshot_x2"]
+    y2 := CFG["region_screenshot_y2"]
+
+    if (x1 = 0 && y1 = 0 && x2 = 0 && y2 = 0) {
+        Log("❌ SS Region belum di-set. Buka RegionSelector → 📷 SS Region")
+        return
+    }
+
+    w := x2 - x1
+    h := y2 - y1
+
+    ; ── GDI capture ───────────────────────────────────────
+    hScrDC  := DllCall("GetDC",                  "Ptr", 0,      "Ptr")
+    hMemDC  := DllCall("CreateCompatibleDC",     "Ptr", hScrDC, "Ptr")
+    hBitmap := DllCall("CreateCompatibleBitmap", "Ptr", hScrDC, "Int", w, "Int", h, "Ptr")
+    DllCall("SelectObject", "Ptr", hMemDC, "Ptr", hBitmap)
+    DllCall("BitBlt",
+        "Ptr", hMemDC, "Int", 0,  "Int", 0,  "Int", w, "Int", h,
+        "Ptr", hScrDC, "Int", x1, "Int", y1, "UInt", 0x00CC0020)
+
+    ; ── Copy ke clipboard ─────────────────────────────────
+    DllCall("OpenClipboard",  "Ptr", 0)
+    DllCall("EmptyClipboard")
+    hBitmapClip := DllCall("CopyImage", "Ptr", hBitmap, "UInt", 0, "Int", 0, "Int", 0, "UInt", 0, "Ptr")
+    DllCall("SetClipboardData", "UInt", 2, "Ptr", hBitmapClip)
+    DllCall("CloseClipboard")
+
+    ; ── Save ke Desktop\Screenshots ───────────────────────
+    saveFolder := A_MyDocuments "\..\Desktop\Screenshots"
+    if !DirExist(saveFolder)
+        DirCreate(saveFolder)
+    fileName := "ss_" FormatTime(, "yyyyMMdd_HHmmss") ".png"
+    savePath := saveFolder "\" fileName
+    SaveHBitmapToPng(hBitmap, savePath)
+
+    ; ── Cleanup GDI ───────────────────────────────────────
+    DllCall("DeleteDC",  "Ptr", hMemDC)
+    DllCall("ReleaseDC", "Ptr", 0, "Ptr", hScrDC)
+
+    Log("📷 " fileName " (" w "×" h "px)")
+    ShowSSToast(hBitmap, w, h)
+}
+
+; ── Save HBITMAP ke PNG via GDI+ (reuse di toast juga) ────
+SaveHBitmapToPng(hBitmap, filePath) {
+    DllCall("LoadLibrary", "Str", "gdiplus")
+    si := Buffer(24, 0)
+    NumPut("UInt", 1, si, 0)
+    DllCall("gdiplus\GdiplusStartup", "Ptr*", &pToken:=0, "Ptr", si, "Ptr", 0)
+
+    DllCall("gdiplus\GdipCreateBitmapFromHBITMAP",
+        "Ptr", hBitmap, "Ptr", 0, "Ptr*", &pBitmap:=0)
+
+    CLSID := Buffer(16)
+    DllCall("ole32\CLSIDFromString",
+        "Str", "{557CF406-1A04-11D3-9A73-0000F81EF32E}", "Ptr", CLSID)
+
+    DllCall("gdiplus\GdipSaveImageToFile",
+        "Ptr", pBitmap, "WStr", filePath, "Ptr", CLSID, "Ptr", 0)
+
+    DllCall("gdiplus\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("gdiplus\GdiplusShutdown", "Ptr", pToken)
+}
+
+ShowSSToast(hBitmap, srcW, srcH) {
+    toastW   := 240
+    margin   := 12
+    infoH    := 32
+
+    ; Preview height ikut aspect ratio asli
+    previewH := Integer(toastW * srcH / srcW)
+    ; Cap maksimal 160px biar tidak terlalu tinggi
+    if (previewH > 160)
+        previewH := 160
+    toastH := previewH + infoH
+
+    monW := SysGet(0)
+    monH := SysGet(1)
+    taskbarH := 48
+
+    toastX := monW - toastW - margin
+    toastY := monH - toastH - taskbarH - margin
+
+    tmpPath := A_Temp "\sigmacro_ss_preview.png"
+    SaveHBitmapToPng(hBitmap, tmpPath)
+    DllCall("DeleteObject", "Ptr", hBitmap)
+
+    toast := Gui("-Caption +ToolWindow +AlwaysOnTop -DPIScale")
+    toast.BackColor := "1E1E1E"
+    toast.MarginX := 0
+    toast.MarginY := 0
+
+    ; Preview full width, height pas dengan aspect ratio → tidak ada gap
+    toast.Add("Pic", "x0 y0 w" toastW " h" previewH, tmpPath)
+
+    ; Info bar bawah
+    toast.SetFont("s8 cFFFFFF Norm", "Segoe UI")
+    toast.Add("Text",
+        "x8 y" (previewH + 7) " w" (toastW - 16) " h18 BackgroundTrans",
+        "📋  " srcW "×" srcH "  —  Di Screenshot!")
+
+    toast.Show("x" toastX " y" toastY " w" toastW " h" toastH " NoActivate")
+
+    SetTimer(() => FadeOutToast(toast, tmpPath), -2500)
+}
+
+FadeOutToast(toast, tmpPath) {
+    alpha := 240
+    while (alpha > 0) {
+        WinSetTransparent(alpha, toast)
+        alpha -= 30
+        Sleep(50)
+    }
+    toast.Destroy()
+    try FileDelete(tmpPath)
+}
+
+HBitmapToFile(hBitmap, w, h, filePath) {
+    ; ── Init GDI+ ─────────────────────────────────────────
+    DllCall("LoadLibrary", "Str", "gdiplus")
+    si := Buffer(24, 0)
+    NumPut("UInt", 1, si, 0)
+    DllCall("gdiplus\GdiplusStartup", "Ptr*", &pToken:=0, "Ptr", si, "Ptr", 0)
+
+    ; ── HBITMAP → GDI+ Bitmap → save PNG ke file ──────────
+    DllCall("gdiplus\GdipCreateBitmapFromHBITMAP",
+        "Ptr", hBitmap, "Ptr", 0, "Ptr*", &pBitmap:=0)
+
+    ; CLSID PNG encoder
+    CLSID := Buffer(16)
+    DllCall("ole32\CLSIDFromString",
+        "Str", "{557CF406-1A04-11D3-9A73-0000F81EF32E}", "Ptr", CLSID)
+
+    DllCall("gdiplus\GdipSaveImageToFile",
+        "Ptr", pBitmap, "WStr", filePath, "Ptr", CLSID, "Ptr", 0)
+
+    ; ── Cleanup ───────────────────────────────────────────
+    DllCall("gdiplus\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("gdiplus\GdiplusShutdown", "Ptr", pToken)
 }

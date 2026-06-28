@@ -358,6 +358,9 @@ F12:: Reload()
 ^!0:: DebugIncompatible()
 ^j:: DebugCoorPixel()
 
+; SCREENSHOT
+PrintScreen:: HotkeyAction("Screenshot", CaptureScreenshotRegion)
+
 ; ============================================================
 ;  PAUSE
 ; ============================================================
